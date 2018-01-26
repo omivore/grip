@@ -108,3 +108,26 @@ class OfflineRenderer(ReadmeRenderer):
             'sane_lists',
             UrlizeExtension(),
         ])
+
+class PandocRenderer(ReadmeRenderer):
+    """
+    Renders the specified Readme locally through Pandoc.
+    Must have Pandoc installed on the system, of course.
+    """
+    def __init__(self, user_content=None, context=None):
+        super(PandocRenderer, self).__init__(user_content, context)
+
+    def is_pandoc_installed() -> bool:
+        import pypandoc
+
+        return not pypandoc.get_pandoc_version() == ''
+
+    def render(self, text, auth=None):
+        """
+        Renders markdown content with Pandoc
+        """
+        import pypandoc
+        return pypandoc.convert_text(text,
+                                     to='html5',
+                                     format='markdown',
+                                     extra_args=['-s', '--mathjax'])

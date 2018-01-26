@@ -7,7 +7,7 @@ import errno
 
 from .app import Grip
 from .readers import DirectoryReader, StdinReader, TextReader
-from .renderers import GitHubRenderer, OfflineRenderer
+from .renderers import GitHubRenderer, OfflineRenderer, PandocRenderer
 
 
 def create_app(path=None, user_content=False, context=None, username=None,
@@ -32,7 +32,10 @@ def create_app(path=None, user_content=False, context=None, username=None,
 
     # Customize the renderer
     if render_offline:
-        renderer = OfflineRenderer(user_content, context)
+        if PandocRenderer.is_pandoc_installed():
+            renderer = PandocRenderer(user_content, context)
+        else:
+            renderer = OfflineRenderer(user_content, context)
     elif user_content or context or api_url:
         renderer = GitHubRenderer(user_content, context, api_url)
     else:
