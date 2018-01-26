@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 
 import json
-import sys
+import sys, os, subprocess
 from abc import ABCMeta, abstractmethod
 
 import requests
@@ -11,6 +11,7 @@ try:
 except ImportError:
     markdown = None
     UrlizeExtension = None
+import pypandoc
 
 from .constants import DEFAULT_API_URL
 from .patcher import patch
@@ -118,15 +119,21 @@ class PandocRenderer(ReadmeRenderer):
         super(PandocRenderer, self).__init__(user_content, context)
 
     def is_pandoc_installed() -> bool:
-        import pypandoc
-
-        return not pypandoc.get_pandoc_version() == ''
+        # Test if pandoc is installed by calling it silently
+        try:
+            subprocess.call(["pandoc", "--version"],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.STDOUT)
+            return True
+        except OSError as e:
+            if e.errno == os.errno.ENOENT: return False
+            else: raise
 
     def render(self, text, auth=None):
         """
         Renders markdown content with Pandoc
+        Uses mathjax for html rendering of Latex Math
         """
-        import pypandoc
         return pypandoc.convert_text(text,
                                      to='html5',
                                      format='markdown',
